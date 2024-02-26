@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// we write code in prisma format and prisma-client-js formatter converts this prisma code.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// it is the database information
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+//* each model is the schema of each table
+//* Data type: 
+//* Bytes => it is used to store file informataion
+//* Unsupported => prisma does not support all the data types available in the world and so if there is data type which is supported by a database but not supported by prisma then we can assign Unsupported data type
+
+//* FIELD MODIFIERS
+//* we have [] and ? 
+//* [] indicates array
+//* ? indicated optinal field
+
+//* User to Post (1 to many )
+// * Category to Post ( many to many )
+
+//  @ => indicates field level attribute which is applicable for a particular field.
+//  @@ => indicates blocl level attribute.
+
+model User {
+  id             String          @id @default(uuid())
+  age            Int
+  name           String
+  email          String          @unique
+  role           Role            @default(BASIC)
+  largeNumber    BigInt
+  prefereces     Json
+  writtenPosts   Post[]          @relation("writtenPosts")
+  favouritePost  Post[]          @relation("favouritePosts")
+  UserPreference UserPreference?
+
+  //* indicates two person should not have both age and name as same. if one field is same then no issue.
+  @@unique([age, name])
+  //* indexing is done using email which is useful for sorting.
+  @@index([email])
+}
+
+model UserPreference {
+  id           String  @id @default(uuid())
+  emailUpdates Boolean
+  user         User    @relation(fields: [userId], references: [id])
+  userId       String  @unique
+}
+
+model Post {
+  id             String     @id @default(uuid())
+  title          String
+  averageRating  Float // Decimal/Float (Decimal for more specific numbers)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  author         User       @relation("writtenPosts", fields: [authorId], references: [id])
+  authorId       String
+  favouritedBy   User?      @relation("favouritePosts", fields: [favouritedById], references: [id])
+  favouritedById String?
+  categories     Category[]
+
+  //* In this way we can create composite id
+  // @@id([title, authorId])
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  posts Post[]
+}
+
+enum Role {
+  BASIC
+  ADMIN
+}
