@@ -32,16 +32,17 @@ datasource db {
 //  @@ => indicates blocl level attribute.
 
 model User {
-  id             String          @id @default(uuid())
-  age            Int
-  name           String
-  email          String          @unique
-  role           Role            @default(BASIC)
-  largeNumber    BigInt
-  prefereces     Json
-  writtenPosts   Post[]          @relation("writtenPosts")
-  favouritePost  Post[]          @relation("favouritePosts")
-  UserPreference UserPreference?
+  id               String          @id @default(uuid())
+  age              Int
+  name             String
+  email            String          @unique
+  role             Role            @default(BASIC)
+  largeNumber      BigInt?
+  prefereces       Json?
+  writtenPosts     Post[]          @relation("writtenPosts")
+  favouritePost    Post[]          @relation("favouritePosts")
+  UserPreference   UserPreference? @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String?         @unique
 
   //* indicates two person should not have both age and name as same. if one field is same then no issue.
   @@unique([age, name])
@@ -52,8 +53,7 @@ model User {
 model UserPreference {
   id           String  @id @default(uuid())
   emailUpdates Boolean
-  user         User    @relation(fields: [userId], references: [id])
-  userId       String  @unique
+  user         User?
 }
 
 model Post {
